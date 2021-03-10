@@ -3,8 +3,11 @@ package ehu.weka;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Remove;
 
 import java.io.FileWriter;
+import java.util.ArrayList;
 
 public class MainAtributuenHautapena {
     public static void main(String[] args) throws Exception {
@@ -73,9 +76,10 @@ public class MainAtributuenHautapena {
 
     public static void iragarpenak(Instances data, Instances test, Classifier model, String path) throws Exception {
         //2. Test multzoaren iragarpenak egin
+        AtributuenHautapena fss = AtributuenHautapena.getInstance();
         if(!data.equalHeaders(test)){
-            AtributuenHautapena fss = AtributuenHautapena.getInstance();
             String[] atribLista = fss.atributuLista(data);
+            ArrayList<Integer> indizeak = new ArrayList<Integer>();
             int j=0;
             for(int i=0; i<atribLista.length;){
                 if(atribLista[i].equals(test.attribute(j).name())){
@@ -83,10 +87,17 @@ public class MainAtributuenHautapena {
                     i++;
                 }
                 else{
-                    test.remove(j);
+                    indizeak.add(j);
+                    j++;
                 }
             }
-
+            int[] array = fss.arrayConverter(indizeak);
+            Remove remove = new Remove();
+            remove.setAttributeIndicesArray(array);
+            remove.setInvertSelection(true);
+            remove.setInputFormat(test);
+            test = Filter.useFilter(test,remove);
+            test.setClassIndex(test.numAttributes()-1);
         }
 
         Evaluation eval = new Evaluation(test);
