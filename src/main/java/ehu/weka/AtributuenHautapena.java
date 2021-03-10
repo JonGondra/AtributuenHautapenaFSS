@@ -94,4 +94,10 @@ public class AtributuenHautapena {
         replaced.setClassIndex(replaced.numAttributes()-1);
         return replaced;
     }
+
+    public String[] atributuLista(Instances data) throws Exception {
+        String[] emaitza = new String[data.numAttributes()];
+        for(int i=0; i<emaitza.length; i++){ emaitza[i] = data.attribute(i).name(); }
+        return emaitza;
+    }
 }

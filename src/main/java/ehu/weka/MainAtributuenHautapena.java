@@ -30,13 +30,13 @@ public class MainAtributuenHautapena {
 
 
         //1. Eredu iragarle optimoa sortu eta gorde
-        iragarleOptimoa(data,args[1]);
+        Instances selection = iragarleOptimoa(data,args[1]);
 
 
         //2. Test multzoaren iragarpenak egin
         Instances test = fss.datuakKargatu(args[2]);
         Classifier model = fss.deserialize(args[1]);
-        iragarpenak(data,test,model,args[3]);
+        iragarpenak(selection,test,model,args[3]);
 
 
         //3. Aurre-prozesua:
@@ -44,16 +44,16 @@ public class MainAtributuenHautapena {
         Instances testR = fss.replaceMissingValues(test);
 
         //3.1.Iragarle optimoa
-        iragarleOptimoa(dataR,args[4]);
+        Instances selectionR =iragarleOptimoa(dataR,args[4]);
 
         //3.2.Iragarpenak
         Classifier modelR = fss.deserialize(args[4]);
-        iragarpenak(dataR,testR,modelR,args[5]);
+        iragarpenak(selectionR,testR,modelR,args[5]);
 
     }
 
 
-    public static void iragarleOptimoa(Instances data, String pathModel) throws Exception {
+    public static Instances iragarleOptimoa(Instances data, String pathModel) throws Exception {
         //1. Eredu iragarle optimoa sortu eta gorde
         AtributuenHautapena fss = AtributuenHautapena.getInstance();
         Instances selection = fss.selection(data);
@@ -64,16 +64,29 @@ public class MainAtributuenHautapena {
         System.out.println("F-score: "+holdOut.weightedFMeasure()+"\n");
 
         Classifier cls = fss.sailkatzailea();
-        cls.buildClassifier(data);
+        cls.buildClassifier(selection);
         fss.serialization(pathModel,cls);
+
+        return selection;
     }
 
 
     public static void iragarpenak(Instances data, Instances test, Classifier model, String path) throws Exception {
         //2. Test multzoaren iragarpenak egin
         if(!data.equalHeaders(test)){
-            System.out.println("Test-multzoa ez da eredu iragarlearekiko bateragarria.");
-            System.exit(0);
+            AtributuenHautapena fss = AtributuenHautapena.getInstance();
+            String[] atribLista = fss.atributuLista(data);
+            int j=0;
+            for(int i=0; i<atribLista.length;){
+                if(atribLista[i].equals(test.attribute(j).name())){
+                    j++;
+                    i++;
+                }
+                else{
+                    test.remove(j);
+                }
+            }
+
         }
 
         Evaluation eval = new Evaluation(test);
